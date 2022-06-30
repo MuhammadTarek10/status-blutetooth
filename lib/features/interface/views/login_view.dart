@@ -56,6 +56,9 @@ class _LoginViewState extends State<LoginView> {
               decoration: const InputDecoration(
                 hintText: AppStrings.passwordHintText,
               ),
+              obscureText: true,
+              enableSuggestions: false,
+              autocorrect: false,
             ),
             SizedBox(
               width: double.infinity,

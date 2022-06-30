@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:status_bluetooth/config/routes.dart';
 import 'package:status_bluetooth/features/interface/views/login_view.dart';
 import 'package:status_bluetooth/features/interface/views/status_view.dart';
 
@@ -14,10 +15,10 @@ class _StatusAppState extends State<StatusApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: "/login",
+      initialRoute: AppRoutes.statusRoute,
       routes: {
-        "/login": (context) => const LoginView(),
-        "/status": (context) => const StatusView(),
+        AppRoutes.loginRoute: (context) => const LoginView(),
+        AppRoutes.statusRoute: (context) => const StatusView(),
       },
     );
   }
