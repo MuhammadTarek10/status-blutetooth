@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:status_bluetooth/core/utils/app_colors.dart';
@@ -13,6 +15,21 @@ class BluetoothOnView extends StatefulWidget {
 class _BluetoothOnViewState extends State<BluetoothOnView> {
   bool lighting = false;
   bool airConditioning = false;
+  final FlutterBlue _flutterBlue = FlutterBlue.instance;
+  List<String> uuidList = [];
+  List<String> rssiList = [];
+
+  void _addToUUIDList(String uuid) {
+    if (!uuidList.contains(uuid)) {
+      uuidList.add(uuid);
+    }
+  }
+
+  void _addToRSSIList(String rssi) {
+    if (!rssiList.contains(rssi)) {
+      rssiList.add(rssi);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +91,7 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
           if (snapshot.data!) {
             return FloatingActionButton(
               onPressed: () {
-                FlutterBlue.instance.stopScan();
+                _flutterBlue.stopScan();
               },
               backgroundColor: AppColors.stopColor,
               child: const Icon(Icons.stop),
@@ -82,9 +99,26 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
           } else {
             return FloatingActionButton(
               onPressed: () {
-                FlutterBlue.instance.startScan(
-                  timeout: const Duration(seconds: 4),
-                );
+                rssiList.clear();
+                uuidList.clear();
+                _flutterBlue.startScan(timeout: const Duration(seconds: 10));
+                _flutterBlue.scanResults.listen((results) async {
+                  for (ScanResult result in results) {
+                    log("Trying to connect to ${result.device.id.id}");
+                    _addToRSSIList(result.rssi.toString());
+                    await result.device.connect(autoConnect: false);
+                    log("Connected");
+                    var service = await result.device.discoverServices();
+                    for (BluetoothService s in service) {
+                      _addToUUIDList(s.uuid.toString());
+                    }
+                    log("Disconneting");
+                    await result.device.disconnect();
+                    log("Disconnected");
+                    log(rssiList.toString());
+                    log(uuidList.toString());
+                  }
+                });
               },
               child: const Icon(Icons.search),
             );
