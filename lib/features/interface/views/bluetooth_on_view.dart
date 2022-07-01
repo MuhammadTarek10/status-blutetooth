@@ -1,9 +1,13 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:status_bluetooth/core/utils/app_colors.dart';
 import 'package:status_bluetooth/core/utils/app_strings.dart';
+import 'package:status_bluetooth/features/data/models/models.dart';
+import 'package:http/http.dart' as http;
 
 class BluetoothOnView extends StatefulWidget {
   const BluetoothOnView({Key? key}) : super(key: key);
@@ -18,6 +22,7 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
   final FlutterBlue _flutterBlue = FlutterBlue.instance;
   List<String> uuidList = [];
   List<String> rssiList = [];
+  List<String> macAddressList = [];
 
   void _addToUUIDList(String uuid) {
     if (!uuidList.contains(uuid)) {
@@ -31,6 +36,12 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
     }
   }
 
+  void _addToMacAddressList(String macAddress) {
+    if (!macAddressList.contains(macAddress)) {
+      macAddressList.add(macAddress);
+    }
+  }
+
   void _getData() {
     rssiList.clear();
     uuidList.clear();
@@ -38,6 +49,7 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
     _flutterBlue.scanResults.listen((results) async {
       for (ScanResult result in results) {
         log("Trying to connect to ${result.device.id.id}");
+        _addToMacAddressList(result.device.id.id);
         _addToRSSIList(result.rssi.toString());
         await getUUID(result);
         log(rssiList.toString());
@@ -46,13 +58,65 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
     });
   }
 
+  void _sendToAPI() async {
+    http.Client client = http.Client();
+    var rssiTosend = 0;
+    var uuidToSend = "";
+    var macAddressToSend = "";
+    final Auth auth = Auth(
+      driverManagerId: "1",
+      driverManagerPassword: "123",
+    );
+    if (rssiList.isNotEmpty) {
+      rssiTosend = int.parse(rssiList[0]);
+    }
+    if (uuidList.isNotEmpty) {
+      uuidToSend = uuidList[0];
+    }
+    if (macAddressList.isNotEmpty) {
+      macAddressToSend = macAddressList[0];
+    }
+    final SensorData sensorData = SensorData(
+      name: "dummyName",
+      macAddress: macAddressToSend,
+      uuid: uuidToSend,
+      rssi: rssiTosend,
+    );
+    final SensorInfo sensorInfo = SensorInfo(sensorId: 12950);
+    final Package package = Package(
+      sensorInfo: sensorInfo,
+      sensorData: sensorData,
+    );
+
+    final ApiModel apiModel = ApiModel(
+      package: package,
+      auth: auth,
+    );
+
+    log(apiModel.toJson().toString());
+
+    final url = Uri.parse("https://learning.masterofthings.com/PostSensorData");
+    final response = await client.post(
+      url,
+      body: json.encode(apiModel.toJson()),
+      headers: {"Content-Type": "application/json"},
+    );
+    if (response.statusCode == 200) {
+      log("GOOD");
+    } else {
+      log("BAD");
+    }
+  }
+
   Future<void> getUUID(ScanResult result) async {
     await result.device.connect(autoConnect: false);
     log("Connected");
     var service = await result.device.discoverServices();
     for (BluetoothService s in service) {
       _addToUUIDList(s.uuid.toString());
+      rssiList.sort();
     }
+    _sendToAPI();
     log("Disconneting");
     await result.device.disconnect();
     log("Disconnected");
@@ -60,6 +124,7 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
 
   @override
   Widget build(BuildContext context) {
+    Timer.periodic(const Duration(minutes: 5), (timer) => _getData());
     return Scaffold(
       appBar: AppBar(
         title: const Text(AppStrings.appTitle),

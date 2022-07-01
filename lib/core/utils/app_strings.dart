@@ -4,7 +4,7 @@ class AppStrings {
   static const String passwordHintText = "Password";
   static const String loginButton = "Login";
 
-  static const String bluetoothOffView = "Turn Bluetooth On";
+  static const String bluetoothOffView = "Turn Bluetooth On and Internet";
 
   static const String lightingCheckBox = "Lighting";
   static const String airConditioningCheckBox = "Air Conditioning";

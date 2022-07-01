@@ -18,7 +18,7 @@ class _StatusAppState extends State<StatusApp> {
       initialRoute: AppRoutes.statusRoute,
       routes: {
         AppRoutes.loginRoute: (context) => const LoginView(),
-        AppRoutes.statusRoute: (context) => const StatusView(),
+        AppRoutes.statusRoute: (context) => StatusView(),
       },
     );
   }
