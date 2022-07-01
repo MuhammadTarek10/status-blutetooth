@@ -10,4 +10,11 @@ class AppStrings {
   static const String airConditioningCheckBox = "Air Conditioning";
 
   static const String configure = "Configure";
+  static const String advancedSettings = "Advanced Settings";
+
+  static const String enterSensorId = "Enter Sensor ID";
+  static const String enterDriverManagerId = "Enter Driver Manager ID";
+  static const String enterDriverManagerPassword =
+      "Enter Driver Manager Password";
+  static const String period = "Enter Interval in minutes";
 }

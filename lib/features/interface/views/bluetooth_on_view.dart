@@ -20,10 +20,43 @@ class BluetoothOnView extends StatefulWidget {
 class _BluetoothOnViewState extends State<BluetoothOnView> {
   bool lighting = false;
   bool airConditioning = false;
+  late int period;
+  late int _sensorId;
+  late String _driverManagerId;
+  late String _driverManagerPassword;
+  late String _name;
+  String uuidSent = "";
+  int rssiSent = 0;
   final FlutterBlue _flutterBlue = FlutterBlue.instance;
+  final TextEditingController sensorIdController = TextEditingController();
+  final TextEditingController driverManagerController = TextEditingController();
+  final TextEditingController driverPasswordController =
+      TextEditingController();
+  final TextEditingController periodTextEditingController =
+      TextEditingController();
   List<String> uuidList = [];
   List<String> rssiList = [];
   List<String> macAddressList = [];
+
+  @override
+  void dispose() {
+    sensorIdController.dispose();
+    driverManagerController.dispose();
+    driverPasswordController.dispose();
+    periodTextEditingController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    period = AppConstants.durationForAPI;
+    _sensorId = 12950;
+    _driverManagerId = "1";
+    _driverManagerPassword = "123";
+    _name = "";
+    _getData();
+  }
 
   void _addToUUIDList(String uuid) {
     if (!uuidList.contains(uuid)) {
@@ -43,31 +76,44 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
     }
   }
 
-  void _getData() {
+  void _getData() async {
     rssiList.clear();
     uuidList.clear();
+    macAddressList.clear();
     log("Started Scanning");
-    _flutterBlue.startScan(timeout: const Duration(seconds: 10));
+    _flutterBlue.startScan(timeout: const Duration(seconds: 4));
     _flutterBlue.scanResults.listen((results) async {
       for (ScanResult result in results) {
         log("Trying to connect to ${result.device.id.id}");
         _addToMacAddressList(result.device.id.id);
         _addToRSSIList(result.rssi.toString());
         await getUUID(result);
-        log(rssiList.toString());
-        log(uuidList.toString());
       }
     });
   }
 
-  void _sendToAPI() async {
+  Future<void> getUUID(ScanResult result) async {
+    await result.device.connect(autoConnect: false);
+    log("Connected");
+    var service = await result.device.discoverServices();
+    for (BluetoothService s in service) {
+      _addToUUIDList(s.uuid.toString());
+      await _sendToAPI();
+      rssiList.sort();
+    }
+    log("Disconneting");
+    await result.device.disconnect();
+    log("Disconnected");
+  }
+
+  Future<void> _sendToAPI() async {
     http.Client client = http.Client();
     var rssiTosend = 0;
     var uuidToSend = "";
     var macAddressToSend = "";
     final Auth auth = Auth(
-      driverManagerId: "1",
-      driverManagerPassword: "123",
+      driverManagerId: _driverManagerId,
+      driverManagerPassword: _driverManagerPassword,
     );
     if (rssiList.isNotEmpty) {
       rssiTosend = int.parse(rssiList[0]);
@@ -78,13 +124,17 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
     if (macAddressList.isNotEmpty) {
       macAddressToSend = macAddressList[0];
     }
+    if (uuidSent == uuidToSend && rssiSent == rssiTosend) {
+      return;
+    }
+    AppConstants.showToast(message: "Sending to API");
     final SensorData sensorData = SensorData(
-      name: "dummyName",
+      name: _name,
       macAddress: macAddressToSend,
       uuid: uuidToSend,
       rssi: rssiTosend,
     );
-    final SensorInfo sensorInfo = SensorInfo(sensorId: 12950);
+    final SensorInfo sensorInfo = SensorInfo(sensorId: _sensorId);
     final Package package = Package(
       sensorInfo: sensorInfo,
       sensorData: sensorData,
@@ -98,6 +148,8 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
     log(apiModel.toJson().toString());
 
     final url = Uri.parse("https://learning.masterofthings.com/PostSensorData");
+    uuidSent = uuidToSend;
+    rssiSent = rssiTosend;
     final response = await client.post(
       url,
       body: json.encode(apiModel.toJson()),
@@ -110,32 +162,18 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
     }
   }
 
-  Future<void> getUUID(ScanResult result) async {
-    await result.device.connect(autoConnect: false);
-    log("Connected");
-    var service = await result.device.discoverServices();
-    for (BluetoothService s in service) {
-      _addToUUIDList(s.uuid.toString());
-      rssiList.sort();
-    }
-    _sendToAPI();
-    log("Disconneting");
-    await result.device.disconnect();
-    log("Disconnected");
-  }
-
   @override
   Widget build(BuildContext context) {
     Timer.periodic(
-      const Duration(minutes: AppConstants.durationForAPI),
+      Duration(minutes: period),
       (timer) => _getData(),
     );
     return Scaffold(
       appBar: AppBar(
         title: const Text(AppStrings.appTitle),
       ),
-      body: Column(
-        children: [
+      body: SingleChildScrollView(
+        child: Column(children: [
           Row(
             children: [
               Expanded(
@@ -169,40 +207,59 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
             ],
           ),
           SizedBox(
+            height: MediaQuery.of(context).size.height * 0.1,
+          ),
+          const Text(AppStrings.advancedSettings),
+          TextFormField(
+            controller: sensorIdController,
+            decoration: const InputDecoration(
+              hintText: AppStrings.enterSensorId,
+            ),
+          ),
+          TextFormField(
+            controller: driverManagerController,
+            decoration: const InputDecoration(
+              hintText: AppStrings.enterDriverManagerId,
+            ),
+          ),
+          TextFormField(
+            controller: driverPasswordController,
+            decoration: const InputDecoration(
+              hintText: AppStrings.enterDriverManagerPassword,
+            ),
+          ),
+          TextFormField(
+            controller: periodTextEditingController,
+            decoration: const InputDecoration(
+              hintText: AppStrings.period,
+            ),
+          ),
+          SizedBox(
             height: MediaQuery.of(context).size.height * 0.2,
           ),
           SizedBox(
-            width: MediaQuery.of(context).size.width * 0.5,
-            height: MediaQuery.of(context).size.height * 0.1,
-            child: ElevatedButton(
-              child: const Text(AppStrings.configure),
-              onPressed: () {
-                log(lighting.toString());
-                log(airConditioning.toString());
-              },
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: StreamBuilder<bool>(
-        stream: FlutterBlue.instance.isScanning,
-        initialData: false,
-        builder: (c, snapshot) {
-          if (snapshot.data!) {
-            return FloatingActionButton(
-              onPressed: () {
-                _flutterBlue.stopScan();
-              },
-              backgroundColor: AppColors.stopColor,
-              child: const Icon(Icons.stop),
-            );
-          } else {
-            return FloatingActionButton(
-              onPressed: () => _getData(),
-              child: const Icon(Icons.search),
-            );
-          }
-        },
+              width: MediaQuery.of(context).size.width * 0.5,
+              height: MediaQuery.of(context).size.height * 0.1,
+              child: ElevatedButton(
+                child: const Text(AppStrings.configure),
+                onPressed: () {
+                  _sensorId = sensorIdController.text.isNotEmpty
+                      ? int.parse(sensorIdController.text)
+                      : 12950;
+                  _driverManagerId = driverManagerController.text.isNotEmpty
+                      ? driverManagerController.text
+                      : "1";
+                  _driverManagerPassword =
+                      driverPasswordController.text.isNotEmpty
+                          ? driverPasswordController.text
+                          : "123";
+                  period = periodTextEditingController.text.isNotEmpty
+                      ? int.parse(periodTextEditingController.text)
+                      : 5;
+                  _getData();
+                },
+              )),
+        ]),
       ),
     );
   }
