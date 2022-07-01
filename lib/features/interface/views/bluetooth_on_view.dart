@@ -5,6 +5,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:status_bluetooth/core/utils/app_colors.dart';
+import 'package:status_bluetooth/core/utils/app_constants.dart';
 import 'package:status_bluetooth/core/utils/app_strings.dart';
 import 'package:status_bluetooth/features/data/models/models.dart';
 import 'package:http/http.dart' as http;
@@ -45,6 +46,7 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
   void _getData() {
     rssiList.clear();
     uuidList.clear();
+    log("Started Scanning");
     _flutterBlue.startScan(timeout: const Duration(seconds: 10));
     _flutterBlue.scanResults.listen((results) async {
       for (ScanResult result in results) {
@@ -124,7 +126,10 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
 
   @override
   Widget build(BuildContext context) {
-    Timer.periodic(const Duration(minutes: 5), (timer) => _getData());
+    Timer.periodic(
+      const Duration(minutes: AppConstants.durationForAPI),
+      (timer) => _getData(),
+    );
     return Scaffold(
       appBar: AppBar(
         title: const Text(AppStrings.appTitle),

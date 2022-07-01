@@ -1,3 +1,3 @@
-class AppConstants{
-  
+class AppConstants {
+  static const int durationForAPI = 5;
 }
