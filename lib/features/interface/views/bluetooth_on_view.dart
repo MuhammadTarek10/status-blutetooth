@@ -7,6 +7,7 @@ import 'package:flutter_blue/flutter_blue.dart';
 import 'package:status_bluetooth/core/utils/app_colors.dart';
 import 'package:status_bluetooth/core/utils/app_constants.dart';
 import 'package:status_bluetooth/core/utils/app_strings.dart';
+import 'package:status_bluetooth/features/data/api/end_points.dart';
 import 'package:status_bluetooth/features/data/models/models.dart';
 import 'package:http/http.dart' as http;
 
@@ -24,9 +25,8 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
   late int _sensorId;
   late String _driverManagerId;
   late String _driverManagerPassword;
-  late String _name;
-  String uuidSent = "";
-  int rssiSent = 0;
+  late List<Map<String, dynamic>> _beacons;
+  List<Map<String, dynamic>> beconSent = [];
   final FlutterBlue _flutterBlue = FlutterBlue.instance;
   final TextEditingController sensorIdController = TextEditingController();
   final TextEditingController driverManagerController = TextEditingController();
@@ -54,85 +54,67 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
     _sensorId = 12950;
     _driverManagerId = "1";
     _driverManagerPassword = "123";
-    _name = "";
+    _beacons = [];
     _getData();
-  }
-
-  void _addToUUIDList(String uuid) {
-    if (!uuidList.contains(uuid)) {
-      uuidList.add(uuid);
-    }
   }
 
   void _addToRSSIList(String rssi) {
     if (!rssiList.contains(rssi)) {
-      rssiList.add(rssi);
+      setState(() {
+        rssiList.add(rssi);
+      });
     }
   }
 
-  void _addToMacAddressList(String macAddress) {
+  void _addToMacAddressList(String macAddress, int rssi) {
     if (!macAddressList.contains(macAddress)) {
-      macAddressList.add(macAddress);
+      setState(() {
+        macAddressList.add(macAddress);
+      });
+      _addToRSSIList(rssi.toString());
+      _addToBeaconsList({"macAddress": macAddress, "rssi": rssi});
     }
+  }
+
+  void _addToBeaconsList(Map<String, dynamic> beacon) {
+    _beacons.add(beacon);
   }
 
   void _getData() async {
-    rssiList.clear();
-    uuidList.clear();
-    macAddressList.clear();
     log("Started Scanning");
     _flutterBlue.startScan(timeout: const Duration(seconds: 4));
-    _flutterBlue.scanResults.listen((results) async {
-      for (ScanResult result in results) {
-        log("Trying to connect to ${result.device.id.id}");
-        _addToMacAddressList(result.device.id.id);
-        _addToRSSIList(result.rssi.toString());
-        await getUUID(result);
-      }
-    });
-  }
-
-  Future<void> getUUID(ScanResult result) async {
-    await result.device.connect(autoConnect: false);
-    log("Connected");
-    var service = await result.device.discoverServices();
-    for (BluetoothService s in service) {
-      _addToUUIDList(s.uuid.toString());
-      await _sendToAPI();
-      rssiList.sort();
-    }
-    log("Disconneting");
-    await result.device.disconnect();
-    log("Disconnected");
+    _flutterBlue.scanResults.listen(
+      (results) async {
+        for (ScanResult result in results) {
+          log("Trying to connect to ${result.device.id.id}");
+          _addToMacAddressList(result.device.id.id, result.rssi);
+        }
+      },
+    );
+    log("RSSI List: $rssiList");
+    log("Mac Address List: $macAddressList");
+    log("Beacon List: $_beacons");
+    _sendToAPI();
+    rssiList.clear();
+    macAddressList.clear();
+    _beacons.clear();
   }
 
   Future<void> _sendToAPI() async {
+    if (_beacons.isEmpty) {
+      return;
+    }
+
     http.Client client = http.Client();
-    var rssiTosend = 0;
-    var uuidToSend = "";
-    var macAddressToSend = "";
+    AppConstants.showToast(message: "Sending to API");
     final Auth auth = Auth(
       driverManagerId: _driverManagerId,
       driverManagerPassword: _driverManagerPassword,
     );
-    if (rssiList.isNotEmpty) {
-      rssiTosend = int.parse(rssiList[0]);
-    }
-    if (uuidList.isNotEmpty) {
-      uuidToSend = uuidList[0];
-    }
-    if (macAddressList.isNotEmpty) {
-      macAddressToSend = macAddressList[0];
-    }
-    if (uuidSent == uuidToSend && rssiSent == rssiTosend) {
-      return;
-    }
-    AppConstants.showToast(message: "Sending to API");
     final SensorData sensorData = SensorData(
-      name: _name,
-      macAddress: macAddressToSend,
-      uuid: uuidToSend,
-      rssi: rssiTosend,
+      beacons: _beacons.join(", "),
+      lighting: lighting,
+      airConditioning: airConditioning,
     );
     final SensorInfo sensorInfo = SensorInfo(sensorId: _sensorId);
     final Package package = Package(
@@ -147,9 +129,7 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
 
     log(apiModel.toJson().toString());
 
-    final url = Uri.parse("https://learning.masterofthings.com/PostSensorData");
-    uuidSent = uuidToSend;
-    rssiSent = rssiTosend;
+    final url = Uri.parse(EndPoints.sensorDataAPI);
     final response = await client.post(
       url,
       body: json.encode(apiModel.toJson()),
