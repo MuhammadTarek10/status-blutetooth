@@ -1,3 +1,5 @@
+import 'package:status_bluetooth/core/utils/app_constants.dart';
+
 class AppStrings {
   static const String appTitle = "Status";
   static const String emailHintText = "Email";
@@ -12,9 +14,12 @@ class AppStrings {
   static const String configure = "Configure";
   static const String advancedSettings = "Advanced Settings";
 
-  static const String enterSensorId = "Enter Sensor ID";
-  static const String enterDriverManagerId = "Enter Driver Manager ID";
+  static const String enterSensorId =
+      "Enter Sensor ID - Default is ${AppConstants.sensorId}";
+  static const String enterDriverManagerId =
+      "Enter Driver Manager ID - Default is ${AppConstants.driverManagerId}";
   static const String enterDriverManagerPassword =
       "Enter Driver Manager Password";
-  static const String period = "Enter Interval in minutes";
+  static const String period =
+      "Enter Interval in seconds - Default is ${AppConstants.durationForAPI}";
 }

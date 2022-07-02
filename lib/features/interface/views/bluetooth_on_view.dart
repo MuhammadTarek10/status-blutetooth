@@ -51,9 +51,9 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
   void initState() {
     super.initState();
     period = AppConstants.durationForAPI;
-    _sensorId = 12950;
-    _driverManagerId = "1";
-    _driverManagerPassword = "123";
+    _sensorId = AppConstants.sensorId;
+    _driverManagerId = AppConstants.driverManagerId;
+    _driverManagerPassword = AppConstants.driverManagerPassword;
     _beacons = [];
     _getData();
   }
@@ -72,7 +72,10 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
         macAddressList.add(macAddress);
       });
       _addToRSSIList(rssi.toString());
-      _addToBeaconsList({"macAddress": macAddress, "rssi": rssi});
+      _addToBeaconsList({
+        json.encode("macAddress"): json.encode(macAddress),
+        json.encode("rssi"): json.encode(rssi)
+      });
     }
   }
 
@@ -112,7 +115,7 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
       driverManagerPassword: _driverManagerPassword,
     );
     final SensorData sensorData = SensorData(
-      beacons: _beacons.join(", "),
+      beacons: "[${_beacons.join(", ")}]",
       lighting: lighting,
       airConditioning: airConditioning,
     );
@@ -145,7 +148,7 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
   @override
   Widget build(BuildContext context) {
     Timer.periodic(
-      Duration(minutes: period),
+      Duration(seconds: period),
       (timer) => _getData(),
     );
     return Scaffold(
@@ -225,17 +228,17 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
                 onPressed: () {
                   _sensorId = sensorIdController.text.isNotEmpty
                       ? int.parse(sensorIdController.text)
-                      : 12950;
+                      : AppConstants.sensorId;
                   _driverManagerId = driverManagerController.text.isNotEmpty
                       ? driverManagerController.text
-                      : "1";
+                      : AppConstants.driverManagerId;
                   _driverManagerPassword =
                       driverPasswordController.text.isNotEmpty
                           ? driverPasswordController.text
-                          : "123";
+                          : AppConstants.driverManagerPassword;
                   period = periodTextEditingController.text.isNotEmpty
                       ? int.parse(periodTextEditingController.text)
-                      : 5;
+                      : AppConstants.durationForAPI;
                   _getData();
                 },
               )),
