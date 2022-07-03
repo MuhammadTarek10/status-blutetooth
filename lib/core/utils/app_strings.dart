@@ -2,6 +2,7 @@ import 'package:status_bluetooth/core/utils/app_constants.dart';
 
 class AppStrings {
   static const String appTitle = "Status";
+  static const String loginView = "Login";
   static const String emailHintText = "Email";
   static const String passwordHintText = "Password";
   static const String loginButton = "Login";

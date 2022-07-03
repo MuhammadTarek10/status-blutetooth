@@ -155,6 +155,7 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
     );
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: const Text(AppStrings.appTitle),
       ),
       body: SingleChildScrollView(
@@ -195,28 +196,52 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
             height: MediaQuery.of(context).size.height * 0.1,
           ),
           const Text(AppStrings.advancedSettings),
-          TextFormField(
-            controller: sensorIdController,
-            decoration: const InputDecoration(
-              hintText: AppStrings.enterSensorId,
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 10.0,
+              right: 10.0,
+            ),
+            child: TextFormField(
+              controller: sensorIdController,
+              decoration: const InputDecoration(
+                hintText: AppStrings.enterSensorId,
+              ),
             ),
           ),
-          TextFormField(
-            controller: driverManagerController,
-            decoration: const InputDecoration(
-              hintText: AppStrings.enterDriverManagerId,
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 10.0,
+              right: 10.0,
+            ),
+            child: TextFormField(
+              controller: driverManagerController,
+              decoration: const InputDecoration(
+                hintText: AppStrings.enterDriverManagerId,
+              ),
             ),
           ),
-          TextFormField(
-            controller: driverPasswordController,
-            decoration: const InputDecoration(
-              hintText: AppStrings.enterDriverManagerPassword,
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 10.0,
+              right: 10.0,
+            ),
+            child: TextFormField(
+              controller: driverPasswordController,
+              decoration: const InputDecoration(
+                hintText: AppStrings.enterDriverManagerPassword,
+              ),
             ),
           ),
-          TextFormField(
-            controller: periodTextEditingController,
-            decoration: const InputDecoration(
-              hintText: AppStrings.period,
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 10.0,
+              right: 10.0,
+            ),
+            child: TextFormField(
+              controller: periodTextEditingController,
+              decoration: const InputDecoration(
+                hintText: AppStrings.period,
+              ),
             ),
           ),
           SizedBox(

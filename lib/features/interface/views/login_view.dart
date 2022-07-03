@@ -88,32 +88,60 @@ class _LoginViewState extends State<LoginView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: const Text(AppStrings.loginView),
         elevation: 0,
-        backgroundColor: Colors.white,
+        centerTitle: true,
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            TextFormField(
-              key: _emailKey,
-              controller: _emailEditingController,
-              decoration: const InputDecoration(
-                hintText: AppStrings.emailHintText,
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(5),
+                color: Colors.grey.shade200,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: 8.0,
+                  right: 8.0,
+                ),
+                child: TextFormField(
+                  key: _emailKey,
+                  controller: _emailEditingController,
+                  decoration: const InputDecoration(
+                    hintText: AppStrings.emailHintText,
+                  ),
+                ),
               ),
             ),
-            TextFormField(
-              key: _passwordKey,
-              controller: _passwordEditingController,
-              decoration: const InputDecoration(
-                hintText: AppStrings.passwordHintText,
+            Container(
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(5),
+                  color: Colors.grey.shade200),
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: 8.0,
+                  right: 8.0,
+                ),
+                child: TextFormField(
+                  key: _passwordKey,
+                  controller: _passwordEditingController,
+                  decoration: const InputDecoration(
+                    hintText: AppStrings.passwordHintText,
+                  ),
+                  obscureText: true,
+                  enableSuggestions: false,
+                  autocorrect: false,
+                ),
               ),
-              obscureText: true,
-              enableSuggestions: false,
-              autocorrect: false,
+            ),
+            Divider(
+              height: MediaQuery.of(context).size.height * 0.05,
             ),
             SizedBox(
+              height: MediaQuery.of(context).size.height * 0.05,
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
