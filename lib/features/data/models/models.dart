@@ -73,22 +73,26 @@ class SensorData {
     required this.beacons,
     required this.lighting,
     required this.airConditioning,
+    required this.participantID,
   });
 
   String beacons;
   bool lighting;
   bool airConditioning;
+  String participantID;
 
   factory SensorData.fromJson(Map<String, dynamic> json) => SensorData(
         beacons: json["beacons"],
         lighting: json["lighting"],
         airConditioning: json["airConditioning"],
+        participantID: json["participantID"],
       );
 
   Map<String, dynamic> toJson() => {
         "beacons": beacons,
         "lighting": lighting,
         "airConditioning": airConditioning,
+        "participantID": participantID,
       };
 }
 
@@ -156,4 +160,76 @@ class BeaconList {
 
   @override
   int get hashCode => beaconList.hashCode;
+}
+
+LoginModel loginModelFromJson(String str) => LoginModel.fromJson(json.decode(str));
+
+String loginModelToJson(LoginModel data) => json.encode(data.toJson());
+
+class LoginModel {
+    LoginModel({
+        required this.appId,
+        required this.limit,
+        required this.conditionList,
+        required this.auth,
+    });
+
+    int appId;
+    int limit;
+    List<ConditionList> conditionList;
+    AuthLogin auth;
+
+    factory LoginModel.fromJson(Map<String, dynamic> json) => LoginModel(
+        appId: json["AppId"],
+        limit: json["Limit"],
+        conditionList: List<ConditionList>.from(json["ConditionList"].map((x) => ConditionList.fromJson(x))),
+        auth: AuthLogin.fromJson(json["Auth"]),
+    );
+
+    Map<String, dynamic> toJson() => {
+        "AppId": appId,
+        "Limit": limit,
+        "ConditionList": List<dynamic>.from(conditionList.map((x) => x.toJson())),
+        "Auth": auth.toJson(),
+    };
+}
+
+class ConditionList {
+    ConditionList({
+        required this.reading,
+        required this.condition,
+        required this.value,
+    });
+
+    String reading;
+    String condition;
+    String value;
+
+    factory ConditionList.fromJson(Map<String, dynamic> json) => ConditionList(
+        reading: json["Reading"],
+        condition: json["Condition"],
+        value: json["Value"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "Reading": reading,
+        "Condition": condition,
+        "Value": value,
+    };
+}
+
+class AuthLogin {
+    AuthLogin({
+        required this.key,
+    });
+
+    String key;
+
+    factory AuthLogin.fromJson(Map<String, dynamic> json) => AuthLogin(
+        key: json["Key"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "Key": key,
+    };
 }

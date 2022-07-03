@@ -1,7 +1,14 @@
+import 'dart:convert';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
-import 'package:status_bluetooth/config/routes.dart';
 import 'package:status_bluetooth/core/utils/app_colors.dart';
+import 'package:status_bluetooth/core/utils/app_constants.dart';
 import 'package:status_bluetooth/core/utils/app_strings.dart';
+import 'package:http/http.dart' as http;
+import 'package:status_bluetooth/features/data/api/end_points.dart';
+import 'package:status_bluetooth/features/data/models/models.dart';
+import 'package:status_bluetooth/features/interface/views/status_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({Key? key}) : super(key: key);
@@ -29,6 +36,52 @@ class _LoginViewState extends State<LoginView> {
     _emailEditingController.dispose();
     _passwordEditingController.dispose();
     super.dispose();
+  }
+
+  Future<String> _login() async {
+    AuthLogin authLogin = AuthLogin(key: AppStrings.authKey);
+    ConditionList emailConditionList = ConditionList(
+      reading: "email",
+      condition: "e",
+      value: _emailEditingController.text,
+    );
+
+    ConditionList passwordConditionList = ConditionList(
+      reading: "password",
+      condition: "e",
+      value: _passwordEditingController.text,
+    );
+
+    List<ConditionList> conditionList = [
+      emailConditionList,
+      passwordConditionList
+    ];
+
+    LoginModel loginModel = LoginModel(
+      appId: AppStrings.appID,
+      limit: AppStrings.limit,
+      conditionList: conditionList,
+      auth: authLogin,
+    );
+    http.Client client = http.Client();
+    final Uri url = Uri.parse(EndPoints.loginAPI);
+    final response = await client.post(
+      url,
+      body: json.encode(
+        loginModel.toJson(),
+      ),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+
+    try {
+      var id = json.decode(response.body)["Result"][0]["ParticipantID"];
+      log(id.toString());
+      return id;
+    } catch (e) {
+      return "BAD";
+    }
   }
 
   @override
@@ -62,15 +115,24 @@ class _LoginViewState extends State<LoginView> {
             ),
             SizedBox(
               width: double.infinity,
-              child: TextButton(
-                onPressed: () {
-                  Navigator.pushReplacementNamed(
-                      context, AppRoutes.statusRoute);
+              child: ElevatedButton(
+                onPressed: () async {
+                  final id = await _login();
+                  if (id != "BAD") {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => StatusView(id: id),
+                      ),
+                    );
+                  } else {
+                    AppConstants.showToast(message: AppStrings.loginFailed);
+                  }
                 },
                 child: const Text(
                   AppStrings.loginButton,
                   style: TextStyle(
-                    color: AppColors.primaryColor,
+                    color: AppColors.buttonColor,
                   ),
                 ),
               ),

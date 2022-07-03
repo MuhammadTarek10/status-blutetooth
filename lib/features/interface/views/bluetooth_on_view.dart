@@ -12,7 +12,9 @@ import 'package:status_bluetooth/features/data/models/models.dart';
 import 'package:http/http.dart' as http;
 
 class BluetoothOnView extends StatefulWidget {
-  const BluetoothOnView({Key? key}) : super(key: key);
+  const BluetoothOnView({Key? key, required this.id}) : super(key: key);
+
+  final String id;
 
   @override
   State<BluetoothOnView> createState() => _BluetoothOnViewState();
@@ -109,16 +111,15 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
     }
 
     http.Client client = http.Client();
-    AppConstants.showToast(message: "Sending to API");
     final Auth auth = Auth(
       driverManagerId: _driverManagerId,
       driverManagerPassword: _driverManagerPassword,
     );
     final SensorData sensorData = SensorData(
-      beacons: "[${_beacons.join(", ")}]",
-      lighting: lighting,
-      airConditioning: airConditioning,
-    );
+        beacons: "[${_beacons.join(", ")}]",
+        lighting: lighting,
+        airConditioning: airConditioning,
+        participantID: widget.id);
     final SensorInfo sensorInfo = SensorInfo(sensorId: _sensorId);
     final Package package = Package(
       sensorInfo: sensorInfo,
@@ -139,6 +140,7 @@ class _BluetoothOnViewState extends State<BluetoothOnView> {
       headers: {"Content-Type": "application/json"},
     );
     if (response.statusCode == 200) {
+      AppConstants.showToast(message: "Sending to API");
       log("GOOD");
     } else {
       log("BAD");

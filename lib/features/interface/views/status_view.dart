@@ -4,7 +4,9 @@ import 'package:status_bluetooth/features/interface/views/bluetooth_off_view.dar
 import 'package:status_bluetooth/features/interface/views/bluetooth_on_view.dart';
 
 class StatusView extends StatelessWidget {
-  const StatusView({Key? key}) : super(key: key);
+  const StatusView({Key? key, required this.id}) : super(key: key);
+
+  final String id;
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +16,7 @@ class StatusView extends StatelessWidget {
       builder: (c, snapshot) {
         final state = snapshot.data;
         if (state == BluetoothState.on) {
-          return const BluetoothOnView();
+          return BluetoothOnView(id: id);
         }
         return const BluetoothOffView();
       },

@@ -22,4 +22,10 @@ class AppStrings {
       "Enter Driver Manager Password";
   static const String period =
       "Enter Interval in seconds - Default is ${AppConstants.durationForAPI}";
+
+  static const String loginFailed = "Login Failed, Invalid Creditials";
+
+  static const int appID = 1658;
+  static const int limit = 1;
+  static const String authKey = "j1jMEelniGilUKMV1656780477750Participants";
 }
