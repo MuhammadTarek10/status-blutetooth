@@ -1,16 +1,3 @@
-# status_bluetooth
+# Status
 
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+It's an app that communicates with an IOT labs for sending current status <b>Lighting</b> and <b>Air Conditioning</b> of a room, and by doing that, the IOT platform knows what to do for that specific room. Also connecting to nearby bluetooth devices and getting their information like Mac Address and RSSI.
